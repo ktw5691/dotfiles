@@ -1,0 +1,13 @@
+[core]
+	excludesFile = ~/.gitignore
+	editor = bbedit
+[user]
+	name = Kenneth Tyler Wilcox
+	email = ktwilcox@cornell.edu
+[init]
+	defaultBranch = main
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

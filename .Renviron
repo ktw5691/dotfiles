@@ -1,0 +1,11 @@
+# Let `renv` use setup in ~/.Rprofile
+# RENV_CONFIG_USER_PROFILE = TRUE
+
+# Help `renv` use setup in ~/Makevars
+# R_MAKEVARS_USER" = "~/.R/Makevars"
+
+PKG_CONFIG_BIN=/opt/homebrew/bin/pkg-config
+
+PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig
+
+CMAKE_BIN=/opt/homebrew/bin/cmake

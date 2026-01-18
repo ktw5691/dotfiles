@@ -1,0 +1,210 @@
+############################################
+#### Homebrew bin / opt / lib locations ####
+############################################
+## For macOS Intel system
+# HB=/usr/local/bin
+# HO=/usr/local/opt
+# HL=/usr/local/lib
+# HI=/usr/local/include
+
+# RGB=/usr/local/gfortran/bin
+# RGL=/usr/local/gfortran/lib
+# RGI=/usr/local/gfortran/include
+
+HB=/opt/homebrew/bin
+HI=/opt/homebrew/include
+HL=/opt/homebrew/lib
+HO=/opt/homebrew/opt
+
+## For Apple Silicon system ##
+RGB=/opt/R/arm64/gfortran/bin
+RGI=/opt/R/arm64/gfortran/include
+RGL=/opt/R/arm64/gfortran/lib
+# RGB=$(HO)
+# RGI=$(HO)/gfortran/include
+# RGL=$(HO)/gfortran/lib
+############################################
+
+# MacOS Xcode header location
+#   (execute `xcrun -show-sdk-path` in terminal to get path; change if different from below)
+#   MacOSX.sdk is symlinked to the most recent version (e.g., MacOSX12.3.sdk)
+XH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+# Configure ccache to speed up recompilation of C, C++, ObjC, ObjC++ programs
+CCACHE=$(HB)/ccache
+CCACHE_CPP2=yes
+
+# Make using all cores (set '-j#' # of cores,
+#   e.g., '-j4')
+MAKE=$(HB)/gmake -j8
+# MAKE=make -j8
+
+# For info on setting up C, C++, Fortran compilers:
+#   Primary resource, https://www.btskinner.io/code/install-r-with-openblas-and-openmp-on-macos-mojave/
+#   See also:
+#     Section 3.13, https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-FAQ.pdf
+#     https://stackoverflow.com/questions/43597632/understanding-the-contents-of-the-makevars-file-in-r-macros-variables-r-ma
+#     Makevars section, <https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Using-C_002b_002b-code>
+#     https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Customizing-package-compilation
+#     For optimization flag '-O, -O2, -O3', https://stackoverflow.com/questions/887509/when-to-use-o2-flag-for-gcc
+#     https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
+
+# For Apple Silicon (M1 chip) Macs configuration, see
+#     https://stackoverflow.com/questions/70638118/configuring-compilers-on-mac-m1-big-sur-monterey-for-rcpp-and-other-tools/70664229#70664229
+
+###############################################################
+#### Define Default Compilers for C, C++, Fortran programs ####
+###############################################################
+
+# LLVM (Clang) compilers for C; default is ‘cc‘
+CC=$(CCACHE) $(HO)/llvm/bin/clang
+
+# LLVM (Clang) compilers for C++; default is ‘g++‘
+CXX=$(CC)++
+CXX98=$(CC)++
+CXX11=$(CC)++
+CXX14=$(CC)++
+CXX17=$(CC)++
+CXX20=$(CC)++
+
+# C preprocessor; default is ‘$(CC) -E‘
+CPP=$(CC) -E
+
+# R doesn't find Objective C++ correctly on Mac OS, so help it out
+OBJC=$(CC)
+OBJCXX=$(CXX)
+
+# Fortran compiler binary (FC); default is ‘f77‘
+FC=$(RGB)/gfortran
+
+# Older v77 Fortran compiler binary (F77)
+F77=$(FC)
+
+###############################################################
+
+###################################
+#### Pass Options for Compiler ####
+###################################
+
+# Note: Generally, default is ‘‘
+
+# Shared flags to be used by C/C++ compiler (CFLAGS, CXXFLAGS, CXX11FLAGS, ...)
+#   -isysroot $(XH) references the include path to the Xcode SDK we set above
+#   -m64 does not do anything on Apple Silicon (M1) chips
+STDC_FLAGS=-isysroot $(XH) \
+    -g \
+    -O3 \
+    -Wall \
+    -pedantic \
+    -mtune=native \
+    -pipe \
+    # -m64 \
+    -arch arm64 \
+    -march=native \
+    -ftemplate-depth=256 \
+    -stdlib=libc++ \
+    -nostdinc++ \
+    -Wno-error=implicit-function-declaration
+    # -Qunused-arguments
+
+## Flags for C compiler
+CFLAGS=$(STDC_FLAGS) -falign-functions=8
+
+## Flags for C++ compiler
+CXXFLAGS=$(STDC_FLAGS)
+CXX98FLAGS=$(STDC_FLAGS)
+CXX11FLAGS=$(STDC_FLAGS)
+CXX14FLAGS=$(STDC_FLAGS)
+CXX17FLAGS=$(STDC_FLAGS)
+CXX20FLAGS=$(STDC_FLAGS)
+
+## Flags for the C preprocessor (and C and Fortran compilers that call it)
+#   Do I pass -isysroot $(XH) here as well?
+CPPFLAGS=-I$(HI) \
+    -I$(HO)/readline/include \
+    -I$(HO)/zlib/include \
+    -I$(HO)/gettext/include \
+    -I$(HO)/gdal/include \
+    -I$(HO)/gsl/include \
+    -I$(HO)/jpeg/include \
+    -I$(HO)/libpq/include \
+    -I$(HO)/libuv/include \
+    -I$(HO)/llvm/include \
+    -I$(HO)/llvm/include/c++/v1/ \
+    -I$(HO)/openblas/include \
+    -I$(HO)/openssl/include \
+    -I$(HO)/tcl-tk/include \
+    -I$(HO)/openjdk/include \
+    -I$(HO)/libpng/include/ \
+    -I$(HO)/libxlst/include/ \
+    -I$(HO)/libxml2/include/ \
+    -I$(HO)/icu4c/include/
+
+# Flags for Fortran compiler; add libraries (e.g., ‘-lgfortran‘) to FLIBS instead
+FFLAGS=-g \
+    -O3 \
+    -mmacosx-version-min=12.0 \
+    -Wall \
+    -nostdinc
+
+# Flags for compilers when they invoke the linker ‘ld’ (e.g., ‘-L’); add libraries (e.g., ‘-lfoo’) to LDLIBS instead
+LDFLAGS+=-L$(HO)/readline/lib \
+    -L$(HO)/zlib/lib \
+    -L$(HO)/gettext/lib \
+    -L$(HO)/gdal/lib \
+    -L$(HO)/gsl/lib \
+    -L$(HO)/jpeg/lib \
+    -L$(HO)/libpq/lib \
+    -L$(HO)/libuv/lib \
+    -L$(HO)/openblas/lib \
+    -L$(HO)/openssl@3/lib \
+    -L$(HO)/openssl/lib \
+    -L$(HO)/libpng/lib \
+    -L$(HO)/libxslt/lib \
+    -L$(HO)/libxml2/lib \
+    -L$(HO)/icu4c/lib \
+    -L$(HO)/llvm/lib \
+    -L$(HO)/llvm/lib/c++ \
+    -Wl,-rpath,$(HO)/llvm/lib \
+        -Wl,-rpath,$(HO)/llvm/lib/c++ \
+    -Wl,-no_compact_unwind
+
+# Library flags/names for compilers when they invoke the linker ‘ld’; add non-library linker flags (e.g., -L) to LDFLAGS
+LDLIBS=-lpng16
+
+# Fortran libraries FLIBS
+# FLIBS=-L$(RGL)/gcc/aarch64-apple-darwin20.6.0/12.0.1 \
+FLIBS=-L$(RGL) \
+    -lgfortran \
+    -lm \
+    -lquadmath
+
+# Set specific compilers if R chooses wrong compiler options, usually not a problem; default is CXX; these will work with gcc and clang++ compilers
+CXX98STD=-std=c++98
+CXX11STD=-std=c++11
+CXX14STD=-std=c++14
+CXX17STD=-std=c++17
+CXX20STD=-std=c++20
+
+# If clang supports OpenMP, flags for OpenMP support when wanted by package and ignored otherwise
+#   Need to include -Xclang flag on Silicon (M1) Macs
+SHLIB_OPENMP_CFLAGS+=-Xclang \
+    -fopenmp
+SHLIB_OPENMP_CXXFLAGS+=-Xclang \
+    -fopenmp
+SHLIB_OPENMP_LDFLAGS+=-lomp
+SHLIB_OPENMP_CPPFLAGS+=-Xclang \
+    -fopenmp
+
+SHLIB_OPENMP_CXX98FLAGS+=-Xclang -fopenmp
+SHLIB_OPENMP_CXX11FLAGS+=-Xclang -fopenmp
+SHLIB_OPENMP_CXX14FLAGS+=-Xclang -fopenmp
+SHLIB_OPENMP_CXX17FLAGS+=-Xclang -fopenmp
+SHLIB_OPENMP_FCFLAGS+=-Xclang -fopenmp
+SHLIB_OPENMP_FFLAGS+=-Xclang -fopenmp
+
+# To install `data.table`, comment out all SHLIB_OPENMP_* lines above and include these two below
+CPPFLAGS+=-Xclang \
+    -fopenmp
+    # -DCATCH_CONFIG_CPP11_NO_SHUFFLE # Temporary fix with Catch not working with LLVM v15+
+LDFLAGS+=-lomp
